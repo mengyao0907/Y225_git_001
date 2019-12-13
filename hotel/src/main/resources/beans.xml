@@ -1,0 +1,87 @@
+
+<!-- 1.SSM整合的时候,原则:Spring只负责对业务Bean,持久层的Bean做管理,做注册,对于Controller层应该是有SpringMVC管理 -->
+
+<!-- 1.配置的是扫描包 -->
+
+<!-- 2.注册第三方数据源 -->
+
+<!-- 3. -->
+
+<!-- 4.配置事务 -->
+
+<!-- 5.开启事务的注解支持 -->
+
+<!-- 基于xml的方式配置事务 -->
+
+
+<!-- 6.开始去配置Spring整合MyBatis-->
+<!-- 作用:就是用来创建我们的SessionFactory -->
+
+<!-- 7.批量的生成接口的代理类和文件,并且将代理类注册到Spring容器中,并且会扫描映射文件 -->
+
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:aop="http://www.springframework.org/schema/aop"
+       xmlns:tx="http://www.springframework.org/schema/tx"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans
+        https://www.springframework.org/schema/beans/spring-beans.xsd
+        http://www.springframework.org/schema/context
+        https://www.springframework.org/schema/context/spring-context.xsd
+        http://www.springframework.org/schema/tx
+        https://www.springframework.org/schema/tx/spring-tx.xsd
+        http://www.springframework.org/schema/aop
+        http://www.springframework.org/schema/aop/spring-aop.xsd">
+
+    <!-- 主配置文件中引入properties配置文件 -->
+    <context:property-placeholder location="classpath:db.properties"/>
+
+    <!-- 注册数据源 -->
+    <bean id="dataSource" class="com.alibaba.druid.pool.DruidDataSource"
+          init-method="init" destroy-method="close">
+        <property name="driverClassName" value="${jdbc.driver}"/>
+        <property name="url" value="${jdbc.url}"/>
+        <property name="username" value="${jdbc.username}"/>
+        <property name="password" value="${jdbc.password}"/>
+    </bean>
+
+    <!-- 定义事务管理器 -->
+    <bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+        <property name="dataSource" ref="dataSource"/>
+    </bean>
+
+    <!-- 开启事务的注解驱动支持 -->
+    <tx:annotation-driven transaction-manager="transactionManager"/>
+
+    <!-- 配置SqlSessionFactoryBean -->
+    <!--作用：创建SqlSessionFactory工厂-->
+    <bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+        <property name="dataSource" ref="dataSource" />
+    </bean>
+
+    <!-- 配置自动扫描所有 Mapper 接口和文件 -->
+    <!-- 作用：能够扫描所有的Mapper接口的实现，让这些Mapper能够自动注入-->
+    <bean class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+        <property name="basePackage" value="cn.bdqn.mapper"/>
+    </bean>
+
+    <bean id="accountController" class="cn.bdqn.controller.AccountController"></bean>
+
+    <bean id="accountService" class="cn.bdqn.service.impl.AccountServiceImpl"></bean>
+
+    <!-- 配置扫描包  -->
+    <context:component-scan base-package="cn.bdqn" use-default-filters="false">
+        <context:include-filter type="annotation" expression="org.springframework.stereotype.Controller"/>
+    </context:component-scan>
+
+    <!-- 配置视图解析器,作用是配置目录前缀和文件后缀，然后解析为一个资源文件 -->
+    <bean id="viewResolver"
+          class="org.springframework.web.servlet.view.InternalResourceViewResolver">
+        <property name="prefix" value="/WEB-INF/jsp/"/>
+        <property name="suffix" value=".jsp"/>
+    </bean>
+
+    <!--    <mvc:annotation-driven/>-->
+
+</beans>
+
